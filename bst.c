@@ -1,36 +1,21 @@
-#include "stdlib.h"
-#include "stdio.h"
+#include <stdio.h>
+#include <string.h>
 #include "bst.h"
-#include "string.h"
 #include "mylib.h"
 
-#define STR_SIZE 256
-
 struct bstnode {
-    char *key;
+    char* key;
     bst left;
     bst right;
 };
 
-bst bst_delete(bst b, char *str) {
-    if(b == NULL) return b;
-
-    if(strcmp(str, b->key) < 0) {
-        b->left = bst_delete(b->left, str);
-    } else if(strcmp(str, b->key) > 0) {
-        b->right = bst_delete(b->right, str);
-    } else {
-        if(b->left == NULL) {
-            bst temp = b->right;
-            free(b->right);
-            return temp;
-        }
-    }
-
-}
-
 bst bst_free(bst b) {
-    
+    bst_free(b->left);
+    bst_free(b->right);
+
+    free(b->key);
+    free(b);
+    return b;
 }
 
 void bst_inorder(bst b, void f(char *str)) {
@@ -43,32 +28,20 @@ void bst_inorder(bst b, void f(char *str)) {
     bst_inorder(b->right, f);
 }
 
-void bst_preorder(bst b, void f(char *str)) {
-    if(b == NULL) {
-        return;
-    }    
-    f(b->key);
-    bst_preorder(b->left, f);
-    bst_preorder(b->right, f);
-}
-
 bst bst_insert(bst b, char *str) {
-    int comp;
-    printf("Trying to insert: %s\n", str);
+    int cond;
     if(b == NULL) {
         b = emalloc(sizeof(bst));
-        b->key = emalloc((strlen(str) + 1) * sizeof(str));
+        b->key = emalloc((strlen(str) + 1) * (sizeof(char)));
         strcpy(b->key, str);
         b->left = b->right = NULL;
-    } 
-    
-    if((comp = strcmp(b->key, str)) < 0) { /*str less than b->key*/
-        printf("Going to left subtree.\n");
+    }
+
+    if((cond = strcmp(b->key, str)) < 0) {
         b->left = bst_insert(b->left, str);
-    } else if(comp > 0) { /*str greater than b->key*/
-        printf("Going to left subtree.\n");
+    } else if(cond > 0) {
         b->right = bst_insert(b->right, str);
-    } else { } /*str == b->key*/
+    } else { }
 
     return b;
 }
@@ -77,29 +50,29 @@ bst bst_new() {
     return NULL;
 }
 
-static void print_key(char* str) {
-    printf("%s\n", str);
+void bst_preorder(bst b, void f(char *str)) {
+    if(b == NULL) {
+        return;
+    }
+
+    f(b->key);
+    bst_preorder(b->left, f);
+    bst_preorder(b->right, f);
 }
 
-/*void bst_print_clean(bst b, int itr_c) {
-    if(b != NULL) {
-        bst_print_clean(b->left, itr_c++);
-        printf("(%d): %s\n", itr_c, b->key);
-        bst_print_clean(b->right, itr_c++);
+int bst_search(bst b, char *str) {
+    int index;
+    int cond;
+
+    if(b == NULL) {
+        return 0;
     }
 
-    return;
-}*/
-
-int main(void){
-    bst root = bst_new();
-    
-    char word[STR_SIZE];
-    while((getword(word, STR_SIZE, stdin) != EOF)) {
-        root = bst_insert(root, word);
+    if((cond = strcmp(b->key, str)) < 0) {
+        return bst_search(b->left, str);
+    } else if(cond > 0) {
+        return bst_search(b->right, str);
+    } else {
+        return 1;
     }
-
-    bst_preorder(root, print_key);
-
-    return EXIT_SUCCESS;
 }
